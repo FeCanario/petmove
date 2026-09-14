@@ -1,0 +1,5 @@
+# Arquivos pessoais, não versionados
+credenciais.local.txt
+
+# Configuração local do Claude Code
+.claude/
