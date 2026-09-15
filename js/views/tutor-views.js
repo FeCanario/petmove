@@ -494,6 +494,34 @@ window.PM = window.PM || {};
     let rasc = PM.state.novaSolicitacao || {};
     let tipo = rasc.tipo || PM.SERVICO_TIPO.TRANSPORTE;
 
+    function iconeEndereco(apelido) {
+      const a = (apelido || "").toLowerCase();
+      if (a.includes("casa") || a.includes("apto") || a.includes("apart")) return "🏠";
+      if (a.includes("pet") || a.includes("shop") || a.includes("loja")) return "🛍️";
+      if (a.includes("vet") || a.includes("clínic") || a.includes("clinic")) return "⚕️";
+      if (a.includes("trabalho") || a.includes("escritório") || a.includes("escritorio")) return "💼";
+      return "📍";
+    }
+
+    function enderecosCards(name, valorSelecionado) {
+      if (!enderecos.length) {
+        return PM.ui.emptyState("📍", "Nenhum endereço cadastrado", "Cadastre um endereço para continuar.", `<a class="btn btn-primary mt-8" href="#/tutor/endereco/novo">Cadastrar endereço</a>`);
+      }
+      return enderecos
+        .map(
+          (e) => `
+        <label class="pick-card">
+          <input type="radio" name="${name}" value="${e.id}" ${valorSelecionado === e.id ? "checked" : ""}>
+          <span class="pick-card-icon">${iconeEndereco(e.apelido)}</span>
+          <div style="flex:1">
+            <p style="font-weight:700">${PM.util.escapeHtml(e.apelido)} ${e.padrao ? PM.ui.badge("Padrão", "primary") : ""}</p>
+            <p class="text-muted" style="font-size:.78rem">${PM.util.escapeHtml(e.logradouro)}, ${PM.util.escapeHtml(e.numero)} — ${PM.util.escapeHtml(e.bairro)}</p>
+          </div>
+        </label>`
+        )
+        .join("");
+    }
+
     function html() {
       return `
       <div class="card">
@@ -512,7 +540,7 @@ window.PM = window.PM || {};
               const vencida = PM.util.vacinaVencida(p.vacina_antirrabica_data);
               const ocupado = servicoAtivoParaPet(p.id);
               return `
-              <label class="card-row" style="border:1.5px solid var(--color-border);border-radius:10px;padding:8px;cursor:pointer">
+              <label class="pick-card ${vencida || ocupado ? "is-disabled" : ""}">
                 <input type="radio" name="pet" value="${p.id}" ${rasc.petId === p.id ? "checked" : ""} ${vencida || ocupado ? "disabled" : ""}>
                 <img class="pet-thumb" src="${p.foto}" alt="">
                 <div style="flex:1">
@@ -529,19 +557,14 @@ window.PM = window.PM || {};
 
       <div class="card">
         <p class="section-title">③ Endereço de origem</p>
-        <select name="origem" class="mt-8">
-          ${enderecos.map((e) => `<option value="${e.id}" ${rasc.origemId === e.id || e.padrao ? "selected" : ""}>${PM.util.escapeHtml(e.apelido)} — ${PM.util.escapeHtml(e.logradouro)}, ${PM.util.escapeHtml(e.numero)}</option>`).join("")}
-        </select>
+        <div class="list mt-8">${enderecosCards("origem", rasc.origemId || enderecos.find((e) => e.padrao)?.id)}</div>
       </div>
 
       ${
         tipo === "TRANSPORTE"
           ? `<div class="card">
               <p class="section-title">④ Endereço de destino</p>
-              <select name="destino" class="mt-8">
-                <option value="">Selecione…</option>
-                ${enderecos.map((e) => `<option value="${e.id}" ${rasc.destinoId === e.id ? "selected" : ""}>${PM.util.escapeHtml(e.apelido)} — ${PM.util.escapeHtml(e.logradouro)}, ${PM.util.escapeHtml(e.numero)}</option>`).join("")}
-              </select>
+              <div class="list mt-8">${enderecosCards("destino", rasc.destinoId)}</div>
             </div>`
           : `<div class="card">
               <p class="section-title">④ Duração do passeio</p>
@@ -595,9 +618,8 @@ window.PM = window.PM || {};
 
     function coletar() {
       const petId = (PM.util.qs('input[name="pet"]:checked', app) || {}).value;
-      const origemId = PM.util.qs('select[name="origem"]', app).value;
-      const destinoSel = PM.util.qs('select[name="destino"]', app);
-      const destinoId = destinoSel ? destinoSel.value : null;
+      const origemId = (PM.util.qs('input[name="origem"]:checked', app) || {}).value || "";
+      const destinoId = (PM.util.qs('input[name="destino"]:checked', app) || {}).value || null;
       const duracaoBtn = PM.util.qs('[data-duracao].is-active', app);
       const duracaoMin = duracaoBtn ? Number(duracaoBtn.dataset.duracao) : 30;
       const observacoes = PM.util.qs('textarea[name="observacoes"]', app).value;
