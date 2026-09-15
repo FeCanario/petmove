@@ -271,7 +271,10 @@ window.PM = window.PM || {};
       PM.util.qs("#p-porte", app).value = sugestao;
     });
 
-    PM.util.qs('[data-form="pet"]', app).addEventListener("submit", (ev) => {
+    const chaveCachePet = `pet:${params.id || "novo"}`;
+    const formPet = PM.util.qs('[data-form="pet"]', app);
+    PM.formcache.ligar(chaveCachePet, formPet);
+    formPet.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const dados = PM.shared.formToObject(ev.target);
       const erros = [];
@@ -301,6 +304,7 @@ window.PM = window.PM || {};
         PM.db.insert("pet", Object.assign({ usuario_id: tutor().id, ativo: true }, payload));
         PM.ui.toast("Pet cadastrado.", "success");
       }
+      PM.formcache.limpar(chaveCachePet);
       PM.router.navegar("#/tutor/pets");
     });
   }
@@ -409,7 +413,10 @@ window.PM = window.PM || {};
       PM.ui.toast("Endereço preenchido a partir do CEP.", "success");
     });
 
-    PM.util.qs('[data-form="endereco"]', app).addEventListener("submit", (ev) => {
+    const chaveCacheEndereco = `endereco:${params.id || "novo"}`;
+    const formEndereco = PM.util.qs('[data-form="endereco"]', app);
+    PM.formcache.ligar(chaveCacheEndereco, formEndereco);
+    formEndereco.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const dados = PM.shared.formToObject(ev.target);
       if (!coords) {
@@ -440,6 +447,7 @@ window.PM = window.PM || {};
         PM.db.insert("endereco", Object.assign({ usuario_id: tutor().id }, payload));
         PM.ui.toast("Endereço cadastrado.", "success");
       }
+      PM.formcache.limpar(chaveCacheEndereco);
       PM.router.navegar("#/tutor/enderecos");
     });
   }
@@ -449,7 +457,7 @@ window.PM = window.PM || {};
     const t = tutor();
     const pets = petsDoTutor(t.id);
     const enderecos = enderecosDoTutor(t.id);
-    const rasc = PM.state.novaSolicitacao || {};
+    let rasc = PM.state.novaSolicitacao || {};
     let tipo = rasc.tipo || PM.SERVICO_TIPO.TRANSPORTE;
 
     function html() {
@@ -526,7 +534,7 @@ window.PM = window.PM || {};
 
       <div class="card">
         <p class="section-title">⑦ Forma de pagamento</p>
-        ${PM.ui.chipGroup("pagamento", PM.FORMAS_PAGAMENTO, [rasc.formaPagamento || "PIX"])}
+        ${PM.ui.chipGroup("pagamento", PM.FORMAS_PAGAMENTO, [rasc.formaPagamento || "PIX"], { unico: true })}
       </div>
 
       <div data-errors></div>
@@ -540,7 +548,11 @@ window.PM = window.PM || {};
       PM.ui.ativarChipGroup(app2);
       PM.util.qsa("[data-tipo]", app2).forEach((b) =>
         b.addEventListener("click", () => {
+          const atual = coletar();
           tipo = b.dataset.tipo;
+          atual.tipo = tipo;
+          rasc = atual;
+          PM.state.novaSolicitacao = atual;
           montar();
         })
       );
@@ -561,11 +573,20 @@ window.PM = window.PM || {};
       return { tipo, petId, origemId, destinoId, duracaoMin, observacoes, recebedorNome, recebedorTelefone, formaPagamento };
     }
 
+    // Rascunho automático: salva a cada alteração para não perder o preenchimento ao sair da tela
+    app.addEventListener("input", () => (PM.state.novaSolicitacao = coletar()));
+    app.addEventListener("change", () => (PM.state.novaSolicitacao = coletar()));
+
     // Delegação porque o botão "Ver resumo" é recriado a cada montar()
     app.addEventListener("click", (ev) => {
       const btnTipo = ev.target.closest("[data-duracao]");
       if (btnTipo) {
         PM.util.qsa("[data-duracao]", app).forEach((b) => b.classList.toggle("is-active", b === btnTipo));
+        PM.state.novaSolicitacao = coletar();
+        return;
+      }
+      if (ev.target.closest(".chip")) {
+        PM.state.novaSolicitacao = coletar();
         return;
       }
       const btnResumo = ev.target.closest("[data-ver-resumo]");

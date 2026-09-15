@@ -306,9 +306,6 @@ legend { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); padd
 .checklist label { display: flex; gap: 8px; font-size: 0.85rem; align-items: flex-start; }
 
 /* ---------- Responsivo desktop ---------- */
-@media (min-width: 640px) {
-  .page:not(.page-wide) { box-shadow: var(--shadow-card); min-height: calc(100vh - var(--topbar-height)); background: var(--color-bg); }
-}
 @media (min-width: 760px) {
   .page-wide { padding: 24px; }
 }
@@ -414,7 +411,11 @@ legend { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); padd
 
 /* ================= Telas internas no computador (mobile fica intocado abaixo de 900px) ================= */
 @media (min-width: 900px) {
-  :root { --max-app-width: 640px; }
+  :root { --max-app-width: 780px; }
+
+  /* Topbar sempre ocupa a largura inteira da tela (não fica "flutuando" como um celular no meio) */
+  .topbar, .topbar.topbar-wide { max-width: none; margin: 0; padding: 0 32px; }
+  .page, .page-wide { margin-left: auto; margin-right: auto; }
 
   /* Login: painel dividido com destaque de marca à esquerda */
   .auth-shell { flex-direction: row; align-items: stretch; justify-content: stretch; padding: 0; }
@@ -430,7 +431,8 @@ legend { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); padd
   .auth-form-side { flex: 1 1 54%; padding: 40px; }
 
   /* Painel do tutor: navegação inferior vira barra lateral fixa */
-  body.layout-sidebar .topbar, body.layout-sidebar .page { margin-left: 250px; margin-right: auto; max-width: 680px; }
+  body.layout-sidebar .topbar { margin-left: 250px; padding-left: 24px; }
+  body.layout-sidebar .page { margin-left: 250px; margin-right: auto; max-width: 860px; }
   body.layout-sidebar #app { padding-bottom: 0; }
 
   .bottom-nav {

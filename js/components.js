@@ -62,9 +62,9 @@ PM.ui = {
       </div>`;
   },
 
-  chipGroup(name, options, selecionados = []) {
+  chipGroup(name, options, selecionados = [], { unico = false } = {}) {
     return `
-      <div class="chip-group" data-chip-group="${name}">
+      <div class="chip-group" data-chip-group="${name}" ${unico ? 'data-chip-unico="1"' : ""}>
         ${options
           .map(
             (op) => `
@@ -78,8 +78,15 @@ PM.ui = {
 
   ativarChipGroup(root) {
     PM.util.qsa("[data-chip-group]", root).forEach((grupo) => {
+      const unico = grupo.dataset.chipUnico === "1";
       PM.util.qsa(".chip", grupo).forEach((chip) => {
-        chip.addEventListener("click", () => chip.classList.toggle("is-selected"));
+        chip.addEventListener("click", () => {
+          if (unico) {
+            PM.util.qsa(".chip", grupo).forEach((c) => c.classList.toggle("is-selected", c === chip));
+          } else {
+            chip.classList.toggle("is-selected");
+          }
+        });
       });
     });
   },

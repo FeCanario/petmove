@@ -47,7 +47,9 @@ window.PM = window.PM || {};
     let fotoPerfil = null;
     PM.ui.ativarCampoCaptura(app, (id, dataUrl) => (fotoPerfil = dataUrl));
 
-    PM.util.qs('[data-form="cad1"]', app).addEventListener("submit", async (ev) => {
+    const formCad1 = PM.util.qs('[data-form="cad1"]', app);
+    PM.formcache.ligar("condutor-cad1", formCad1);
+    formCad1.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = PM.shared.formToObject(ev.target);
       const erros = [];
@@ -97,6 +99,7 @@ window.PM = window.PM || {};
       });
       PM.state.cadastroCondutorId = cond.id;
       await PM.auth.login({ email: d.email, senha: d.senha, perfil: "condutor" });
+      PM.formcache.limpar("condutor-cad1");
       PM.router.navegar("#/condutor/cadastro/2");
     });
   }
@@ -130,7 +133,9 @@ window.PM = window.PM || {};
     const capturas = {};
     PM.ui.ativarCampoCaptura(app, (id, dataUrl) => (capturas[id] = dataUrl));
 
-    PM.util.qs('[data-form="cad2"]', app).addEventListener("submit", (ev) => {
+    const formCad2 = PM.util.qs('[data-form="cad2"]', app);
+    PM.formcache.ligar("condutor-cad2", formCad2);
+    formCad2.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const d = PM.shared.formToObject(ev.target);
       const erros = [];
@@ -145,6 +150,7 @@ window.PM = window.PM || {};
       }
       PM.db.update("condutor", cond.id, { cnh_numero: d.cnh, cnh_categoria: d.categoria, cnh_validade: new Date(d.validade).toISOString() });
       Object.keys(capturas).forEach((tipo) => PM.db.salvarDocumento(cond.id, tipo, capturas[tipo]));
+      PM.formcache.limpar("condutor-cad2");
       PM.router.navegar("#/condutor/cadastro/3");
     });
   }
@@ -207,7 +213,9 @@ window.PM = window.PM || {};
     }
     PM.util.qs("#v-tipo", app).addEventListener("change", checarMoto);
 
-    PM.util.qs('[data-form="cad3"]', app).addEventListener("submit", (ev) => {
+    const formCad3 = PM.util.qs('[data-form="cad3"]', app);
+    PM.formcache.ligar("condutor-cad3", formCad3);
+    formCad3.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const d = PM.shared.formToObject(ev.target);
       const portes = PM.ui.valorChipGroup(app, "portes");
@@ -241,6 +249,7 @@ window.PM = window.PM || {};
       PM.db.salvarDocumento(cond.id, "veiculo_placa", fotoVeiculo);
       PM.fsm.transicionarCondutor(cond.id, CS.EM_ANALISE);
       PM.db.update("condutor", cond.id, { data_envio: new Date().toISOString() });
+      PM.formcache.limpar("condutor-cad3");
       PM.ui.toast("Cadastro enviado para análise!", "success");
       PM.router.navegar("#/condutor/status");
     });

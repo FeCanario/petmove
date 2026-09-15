@@ -134,6 +134,7 @@ window.PM = window.PM || {};
     });
 
     const form = PM.util.qs('[data-form="cadastro-tutor"]', app);
+    PM.formcache.ligar("cadastro-tutor", form);
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const dados = PM.shared.formToObject(form);
@@ -154,6 +155,7 @@ window.PM = window.PM || {};
         return;
       }
       await PM.auth.login({ email: dados.email, senha: dados.senha, perfil: "tutor" });
+      PM.formcache.limpar("cadastro-tutor");
       PM.ui.toast("Conta criada com sucesso!", "success");
       PM.router.navegar("#/tutor/home");
     });

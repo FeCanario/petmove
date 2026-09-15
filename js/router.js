@@ -46,8 +46,13 @@ window.PM = window.PM || {};
       const hashCompleto = (location.hash || "#/").replace(/^#/, "");
       const hash = hashCompleto.split("?")[0];
       const achado = encontrarRota(hash);
-      const app = document.getElementById("app");
       const sessao = PM.auth.sessaoAtual();
+
+      // Troca o #app por um clone vazio: descarta listeners presos direto nele por telas
+      // anteriores (ex.: app.addEventListener em alguma view), evitando vazamento entre rotas.
+      const appAntigo = document.getElementById("app");
+      const app = appAntigo.cloneNode(false);
+      appAntigo.replaceWith(app);
 
       if (!achado) {
         this.navegar(sessao ? PM.router.homePorPerfil(sessao.tipo) : "#/");
