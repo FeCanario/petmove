@@ -109,7 +109,7 @@ window.PM = window.PM || {};
             ${PM.ui.campoSenha({ id: "ct-senha2", name: "senha2", label: "Confirmar senha", placeholder: "Repita a senha", minlength: 8, autocomplete: "new-password" })}
             <label class="checkbox-row">
               <input type="checkbox" name="termos" value="1">
-              <span>Li e aceito os <a class="link-btn" href="#" data-ver-termos">Termos de Uso</a> da PetMove.</span>
+              <span>Li e aceito os <a class="link-btn" href="#" data-ver-termos="1">Termos de Uso</a> da PetMove.</span>
             </label>
             <div data-errors class="mt-8"></div>
             <button class="btn btn-primary mt-8" type="submit">Cadastrar</button>
