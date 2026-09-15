@@ -93,52 +93,86 @@ window.PM = window.PM || {};
   function renderHome(params, app) {
     const t = tutor();
     const pets = petsDoTutor(t.id);
+    const enderecos = enderecosDoTutor(t.id);
+    const totalServicos = PM.db.query("servico", (s) => s.tutor_id === t.id).length;
     const servicoAtivo = servicoAtivoDoTutor(t.id);
 
     const content = `
       <div class="card">
         <p class="section-title">Olá, ${PM.util.escapeHtml(t.nome.split(" ")[0])} 👋</p>
         <p class="section-subtitle">Para onde seu pet vai hoje?</p>
-      </div>
-
-      ${
-        servicoAtivo
-          ? PM.ui.card(`
-        <p class="section-title">Serviço em andamento</p>
-        <p class="section-subtitle">${PM.SERVICO_STATUS_LABEL[servicoAtivo.status]} · ${PM.util.escapeHtml(PM.db.get("pet", servicoAtivo.pet_id)?.nome || "")}</p>
-        <button class="btn btn-primary mt-8" data-ir-servico="${servicoAtivo.id}">Abrir acompanhamento</button>
-      `)
-          : ""
-      }
-
-      <div class="service-grid">
-        <button class="service-tile" data-novo-servico="TRANSPORTE"><span class="icon">🚗</span><span>Transporte</span></button>
-        <button class="service-tile alt" data-novo-servico="PASSEIO"><span class="icon">🐕</span><span>Passeio</span></button>
-      </div>
-
-      <div class="card">
-        <div class="card-row" style="justify-content:space-between">
-          <p class="section-title mb-0">Meus pets</p>
-          <a class="link-btn" href="#/tutor/pets">Ver todos</a>
+        <div class="stat-grid mt-8">
+          <div class="stat-box"><p class="stat-value">${pets.length}</p><p class="stat-label">Pets</p></div>
+          <div class="stat-box"><p class="stat-value">${enderecos.length}</p><p class="stat-label">Endereços</p></div>
+          <div class="stat-box"><p class="stat-value">${totalServicos}</p><p class="stat-label">Serviços</p></div>
         </div>
-        ${
-          pets.length
-            ? `<div class="list mt-8">${pets
-                .slice(0, 3)
-                .map(
-                  (p) => `
-              <div class="card-row">
-                <img class="pet-thumb" src="${p.foto}" alt="${PM.util.escapeHtml(p.nome)}">
-                <div style="flex:1">
-                  <p style="font-weight:700">${PM.util.escapeHtml(p.nome)}</p>
-                  <p class="text-muted" style="font-size:.78rem">${PM.util.escapeHtml(p.raca)} · ${PM.PORTE_LABEL[p.porte]}</p>
-                </div>
-                ${PM.ui.badgeStatusVacina(PM.util.vacinaVencida(p.vacina_antirrabica_data))}
-              </div>`
-                )
-                .join("")}</div>`
-            : PM.ui.emptyState("🐾", "Nenhum pet cadastrado", "Cadastre seu pet para solicitar serviços.", `<a class="btn btn-primary mt-8" href="#/tutor/pet/novo">Cadastrar pet</a>`)
-        }
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-main">
+          ${
+            servicoAtivo
+              ? PM.ui.card(`
+            <p class="section-title">Serviço em andamento</p>
+            <p class="section-subtitle">${PM.SERVICO_STATUS_LABEL[servicoAtivo.status]} · ${PM.util.escapeHtml(PM.db.get("pet", servicoAtivo.pet_id)?.nome || "")}</p>
+            <button class="btn btn-primary mt-8" data-ir-servico="${servicoAtivo.id}">Abrir acompanhamento</button>
+          `)
+              : ""
+          }
+
+          <div class="service-grid">
+            <button class="service-tile" data-novo-servico="TRANSPORTE"><span class="icon">🚗</span><span>Transporte</span></button>
+            <button class="service-tile alt" data-novo-servico="PASSEIO"><span class="icon">🐕</span><span>Passeio</span></button>
+          </div>
+        </div>
+
+        <div class="dashboard-side">
+          <div class="card">
+            <div class="card-row" style="justify-content:space-between">
+              <p class="section-title mb-0">Meus pets</p>
+              <a class="link-btn" href="#/tutor/pets">Ver todos</a>
+            </div>
+            ${
+              pets.length
+                ? `<div class="list mt-8">${pets
+                    .slice(0, 3)
+                    .map(
+                      (p) => `
+                  <div class="card-row">
+                    <img class="pet-thumb" src="${p.foto}" alt="${PM.util.escapeHtml(p.nome)}">
+                    <div style="flex:1">
+                      <p style="font-weight:700">${PM.util.escapeHtml(p.nome)}</p>
+                      <p class="text-muted" style="font-size:.78rem">${PM.util.escapeHtml(p.raca)} · ${PM.PORTE_LABEL[p.porte]}</p>
+                    </div>
+                    ${PM.ui.badgeStatusVacina(PM.util.vacinaVencida(p.vacina_antirrabica_data))}
+                  </div>`
+                    )
+                    .join("")}</div>`
+                : PM.ui.emptyState("🐾", "Nenhum pet cadastrado", "Cadastre seu pet para solicitar serviços.", `<a class="btn btn-primary mt-8" href="#/tutor/pet/novo">Cadastrar pet</a>`)
+            }
+          </div>
+
+          <div class="card">
+            <div class="card-row" style="justify-content:space-between">
+              <p class="section-title mb-0">Meus endereços</p>
+              <a class="link-btn" href="#/tutor/enderecos">Ver todos</a>
+            </div>
+            ${
+              enderecos.length
+                ? `<div class="list mt-8">${enderecos
+                    .slice(0, 3)
+                    .map(
+                      (e) => `
+                  <div class="card-row" style="justify-content:space-between">
+                    <span style="font-weight:700">${PM.util.escapeHtml(e.apelido)}</span>
+                    ${e.padrao ? PM.ui.badge("Padrão", "primary") : ""}
+                  </div>`
+                    )
+                    .join("")}</div>`
+                : PM.ui.emptyState("📍", "Nenhum endereço cadastrado", "", `<a class="btn btn-secondary mt-8" href="#/tutor/endereco/novo">Adicionar endereço</a>`)
+            }
+          </div>
+        </div>
       </div>
     `;
 
@@ -163,7 +197,7 @@ window.PM = window.PM || {};
     const t = tutor();
     const pets = petsDoTutor(t.id, true);
     const content = pets.length
-      ? `<div class="list">
+      ? `<div class="list pets-grid-desktop">
           ${pets
             .map(
               (p) => `
