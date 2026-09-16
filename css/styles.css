@@ -90,6 +90,9 @@ input, select, textarea { font-family: inherit; font-size: 1rem; }
 .bottom-nav-brand { display: none; }
 .bottom-nav-profile { display: none; }
 
+/* Barra lateral do Condutor/Admin no computador — some por completo no celular (mobile fica igual) */
+.app-sidebar { display: none; }
+
 /* ---------- Cards / listas ---------- */
 .card {
   background: var(--color-surface);
@@ -465,10 +468,11 @@ legend { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); padd
   body.layout-sidebar .page { margin-left: 250px; margin-right: auto; max-width: 860px; }
   body.layout-sidebar #app { padding-bottom: 0; }
 
-  .bottom-nav {
+  .bottom-nav, .app-sidebar {
     position: fixed; left: 0; top: 0; bottom: 0; height: 100vh; width: 220px; max-width: 220px;
-    margin: 0; flex-direction: column; align-items: stretch; justify-content: flex-start;
+    margin: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
     padding: 20px 0 20px; border-top: none; border-right: 1px solid var(--color-border); gap: 2px; z-index: 25;
+    background: #fff;
   }
   .bottom-nav-brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 22px; font-weight: 800; color: var(--color-primary); font-size: 1.05rem; }
   .bottom-nav-brand img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
@@ -492,4 +496,16 @@ legend { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); padd
 
   /* Condutor/Admin: mais espaço, sem simular coluna de celular */
   .page-wide { max-width: var(--max-wide-width); }
+  body.layout-sidebar .page.page-wide { max-width: var(--max-wide-width); }
+
+  /* Estatísticas soltas na página (sem card em volta) ficavam com a mesma cor do fundo — some no computador */
+  .stat-box { background: #fff; border: 1px solid var(--color-border); }
+
+  /* Ícones do topbar que só fazem sentido no celular (a barra lateral já cobre isso no computador) */
+  .topbar-action-mobile { display: none; }
+
+  .checklist label {
+    padding: 8px 10px; border-radius: var(--radius-sm); transition: background 0.15s ease;
+  }
+  .checklist label:hover { background: var(--color-bg); }
 }

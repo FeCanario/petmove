@@ -336,7 +336,15 @@ window.PM = window.PM || {};
     `;
     PM.shared.paginaSimples(app, {
       title: "PetMove Condutor",
-      actions: `<a class="icon-btn" href="#/condutor/historico" aria-label="Histórico e ganhos">🕓</a>${PM.shared.logoutAction}`,
+      actions: `<a class="icon-btn topbar-action-mobile" href="#/condutor/historico" aria-label="Histórico e ganhos">🕓</a>${PM.shared.logoutAction}`,
+      sidebar: PM.ui.appSidebar({
+        ativo: "home",
+        usuario: usu,
+        itens: [
+          { key: "home", label: "Início", icon: "🏠", href: "#/condutor/home" },
+          { key: "historico", label: "Histórico e ganhos", icon: "🕓", href: "#/condutor/historico" },
+        ],
+      }),
       content,
     });
     PM.util.qs("[data-toggle-online]", app).addEventListener("change", (e) => {
@@ -530,7 +538,8 @@ window.PM = window.PM || {};
 
   /* ===================== C-08 Histórico, ganhos e documentos ===================== */
   function renderHistoricoCondutor(params, app) {
-    const cond = condutorDe(usuarioLogado().id);
+    const usu = usuarioLogado();
+    const cond = condutorDe(usu.id);
     const servicos = PM.db.query("servico", (s) => s.condutor_id === cond.id).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
     const concluidos = servicos.filter((s) => ["CONCLUIDO", "AVALIADO"].includes(s.status));
     const totalHoje = cond.ganhos_dia || 0;
@@ -571,7 +580,19 @@ window.PM = window.PM || {};
       <button class="btn btn-secondary" data-action="reset-dados">Reiniciar dados de demonstração</button>
       <button class="btn btn-danger" data-action="logout">Sair</button>
     `;
-    PM.shared.paginaSimples(app, { title: "Histórico e ganhos", back: false, content });
+    PM.shared.paginaSimples(app, {
+      title: "Histórico e ganhos",
+      back: false,
+      sidebar: PM.ui.appSidebar({
+        ativo: "historico",
+        usuario: usu,
+        itens: [
+          { key: "home", label: "Início", icon: "🏠", href: "#/condutor/home" },
+          { key: "historico", label: "Histórico e ganhos", icon: "🕓", href: "#/condutor/historico" },
+        ],
+      }),
+      content,
+    });
   }
 
   PM.router.registrar("/condutor/cadastro/1", null, renderCadastroEtapa1);

@@ -48,6 +48,34 @@ PM.ui = {
       </nav>`;
   },
 
+  /* Barra lateral genérica pra Condutor/Admin no computador (some por completo no celular) */
+  appSidebar({ itens, ativo, usuario, perfilHref }) {
+    const nomeUsuario = usuario
+      ? `<img class="avatar" src="${usuario.foto}" alt=""><span class="bottom-nav-profile-name">${PM.util.escapeHtml(usuario.nome)}</span>`
+      : "";
+    return `
+      <nav class="app-sidebar">
+        <div class="bottom-nav-brand"><img src="assets/PetMove.jpeg" alt="">PetMove</div>
+        ${itens
+          .map(
+            (i) => `
+          <a class="bottom-nav-item ${ativo === i.key ? "is-active" : ""}" href="${i.href}">
+            <span class="bottom-nav-icon">${i.icon}</span>
+            <span class="bottom-nav-label">${i.label}</span>
+          </a>`
+          )
+          .join("")}
+        ${
+          usuario
+            ? `<div class="bottom-nav-profile">
+                ${perfilHref ? `<a class="bottom-nav-profile-user" href="${perfilHref}">${nomeUsuario}</a>` : `<div class="bottom-nav-profile-user">${nomeUsuario}</div>`}
+                <button type="button" class="bottom-nav-logout" data-action="logout">⎋ Sair</button>
+              </div>`
+            : ""
+        }
+      </nav>`;
+  },
+
   card(inner, cls = "") {
     return `<div class="card ${cls}">${inner}</div>`;
   },

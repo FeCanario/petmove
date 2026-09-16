@@ -3,7 +3,7 @@ window.PM = window.PM || {};
 PM.shared = {};
 
 (function () {
-  PM.shared.logoutAction = `<button class="icon-btn" data-action="logout" aria-label="Sair">⎋</button>`;
+  PM.shared.logoutAction = `<button class="icon-btn topbar-action-mobile" data-action="logout" aria-label="Sair">⎋</button>`;
 
   function ligarAcoesComuns(root) {
     PM.util.qsa('[data-action="logout"]', root).forEach((logoutBtn) => {
@@ -36,7 +36,7 @@ PM.shared = {};
 
   PM.shared.montar = function (app, html) {
     app.innerHTML = html;
-    document.body.classList.toggle("layout-sidebar", html.includes("bottom-nav"));
+    document.body.classList.toggle("layout-sidebar", html.includes("bottom-nav") || html.includes("app-sidebar"));
     ligarAcoesComuns(app);
     return app;
   };
@@ -50,10 +50,11 @@ PM.shared = {};
     return PM.shared.montar(app, html);
   };
 
-  PM.shared.paginaSimples = function (app, { title, back, actions = "", wide = false, content }) {
+  PM.shared.paginaSimples = function (app, { title, back, actions = "", wide = false, sidebar = "", content }) {
     const html = `
       ${PM.ui.topBar({ title, back, actions, wide })}
       <div class="page ${wide ? "page-wide" : ""}">${content}</div>
+      ${sidebar}
     `;
     return PM.shared.montar(app, html);
   };

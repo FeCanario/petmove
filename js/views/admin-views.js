@@ -44,7 +44,17 @@ window.PM = window.PM || {};
         </div>
       </div>
     `;
-    PM.shared.paginaSimples(app, { title: "Fila de análise", wide: true, actions: PM.shared.logoutAction, content });
+    PM.shared.paginaSimples(app, {
+      title: "Fila de análise",
+      wide: true,
+      actions: PM.shared.logoutAction,
+      sidebar: PM.ui.appSidebar({
+        ativo: "fila",
+        usuario: PM.auth.usuarioAtual(),
+        itens: [{ key: "fila", label: "Fila de análise", icon: "📋", href: "#/admin/fila" }],
+      }),
+      content,
+    });
     PM.util.qsa("[data-abrir]", app).forEach((el) => el.addEventListener("click", () => PM.router.navegar(`#/admin/analise/${el.dataset.abrir}`)));
   }
 
