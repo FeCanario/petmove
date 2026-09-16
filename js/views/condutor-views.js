@@ -24,7 +24,7 @@ window.PM = window.PM || {};
     const content = `
       ${PM.ui.progressoEtapas(1, 3, ["Dados pessoais", "Documentos", "Veículo"])}
       <div class="card">
-        ${PM.ui.campoCaptura({ id: "foto", label: "Foto de perfil", helper: "Capturada pela câmera do dispositivo." })}
+        ${PM.ui.campoCaptura({ id: "foto", label: "Foto de perfil", helper: "Capturada pela câmera do dispositivo.", guia: "Enquadre seu rosto, com boa iluminação" })}
         <form data-form="cad1" class="mt-8">
           <div class="field"><label for="cd-nome">Nome completo</label><input id="cd-nome" name="nome" required></div>
           <div class="field-row">
@@ -120,9 +120,9 @@ window.PM = window.PM || {};
             <div class="field"><label for="cd-validade">Validade da CNH</label><input id="cd-validade" name="validade" type="date" required></div>
           </div>
           <div class="list mt-8">
-            ${PM.ui.campoCaptura({ id: "cnh_frente", label: "Frente da CNH", helper: "Documento inteiro visível, sem reflexo, texto legível." })}
-            ${PM.ui.campoCaptura({ id: "cnh_verso", label: "Verso da CNH" })}
-            ${PM.ui.campoCaptura({ id: "selfie_documento", label: "Selfie segurando a CNH ao lado do rosto" })}
+            ${PM.ui.campoCaptura({ id: "cnh_frente", label: "Frente da CNH", helper: "Documento inteiro visível, sem reflexo, texto legível.", guia: "Enquadre o documento inteiro, sem reflexo" })}
+            ${PM.ui.campoCaptura({ id: "cnh_verso", label: "Verso da CNH", guia: "Enquadre o documento inteiro, sem reflexo" })}
+            ${PM.ui.campoCaptura({ id: "selfie_documento", label: "Selfie segurando a CNH ao lado do rosto", guia: "Rosto e documento visíveis, sem reflexo" })}
           </div>
           <div data-errors class="mt-8"></div>
           <button class="btn btn-primary mt-8" type="submit">Continuar</button>
@@ -187,7 +187,7 @@ window.PM = window.PM || {};
             <label>Equipamentos disponíveis</label>
             ${PM.ui.chipGroup("equip", ["Grade divisória", "Caixa de transporte"], [])}
           </div>
-          ${PM.ui.campoCaptura({ id: "veiculo_placa", label: "Foto do veículo com a placa legível" })}
+          ${PM.ui.campoCaptura({ id: "veiculo_placa", label: "Foto do veículo com a placa legível", guia: "Veículo e placa visíveis e legíveis" })}
           <div data-errors class="mt-8"></div>
           <button class="btn btn-primary mt-8" type="submit">Enviar para análise</button>
         </form>
@@ -454,7 +454,7 @@ window.PM = window.PM || {};
       ${cronometro}
       ${
         passo?.exigeFoto
-          ? `<div class="card">${PM.ui.campoCaptura({ id: "foto_evidencia", label: passo.exigeFoto === "embarque" ? "Foto do embarque" : "Foto do desembarque" })}</div>`
+          ? `<div class="card">${PM.ui.campoCaptura({ id: "foto_evidencia", label: passo.exigeFoto === "embarque" ? "Foto do embarque" : "Foto do desembarque", guia: "Enquadre o pet junto ao tutor ou recebedor" })}</div>`
           : ""
       }
       ${

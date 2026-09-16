@@ -113,8 +113,8 @@ window.PM = window.PM || {};
           ${
             servicoAtivo
               ? PM.ui.card(`
-            <p class="section-title">Serviço em andamento</p>
-            <p class="section-subtitle">${PM.SERVICO_STATUS_LABEL[servicoAtivo.status]} · ${PM.util.escapeHtml(PM.db.get("pet", servicoAtivo.pet_id)?.nome || "")}</p>
+            <p class="section-title">${servicoAtivo.agendado_para ? "Serviço agendado" : "Serviço em andamento"}</p>
+            <p class="section-subtitle">${servicoAtivo.agendado_para ? PM.util.formatDataHoraBR(servicoAtivo.agendado_para) : PM.SERVICO_STATUS_LABEL[servicoAtivo.status]} · ${PM.util.escapeHtml(PM.db.get("pet", servicoAtivo.pet_id)?.nome || "")}</p>
             <button class="btn btn-primary mt-8" data-ir-servico="${servicoAtivo.id}">Abrir acompanhamento</button>
           `)
               : ""
@@ -250,7 +250,8 @@ window.PM = window.PM || {};
 
     const content = `
       <div class="card">
-        ${PM.ui.campoCaptura({ id: "foto", label: "Foto do pet", helper: "Toque para usar a câmera ou escolher da galeria.", value: pet?.foto })}
+        ${PM.ui.campoCaptura({ id: "foto", label: "Foto do pet", helper: "Toque para usar a câmera ou escolher da galeria.", value: pet?.foto, guia: "Enquadre o pet, com boa iluminação" })}
+        <div class="mt-8">${PM.ui.campoCaptura({ id: "carteira_vacinacao", label: "Foto da carteira de vacinação (opcional)", value: pet?.foto_carteira_vacinacao, guia: "Enquadre a carteira, com o texto legível" })}</div>
         <form data-form="pet" class="mt-8">
           <div class="field"><label for="p-nome">Nome</label><input id="p-nome" name="nome" required value="${pet ? PM.util.escapeHtml(pet.nome) : ""}"></div>
           <div class="field-row">
@@ -298,7 +299,11 @@ window.PM = window.PM || {};
     PM.shared.paginaSimples(app, { title: editando ? "Editar pet" : "Novo pet", back: true, content });
     PM.ui.ativarChipGroup(app);
     let fotoAtual = pet?.foto || null;
-    PM.ui.ativarCampoCaptura(app, (id, dataUrl) => (fotoAtual = dataUrl));
+    let fotoCarteiraVacinacao = pet?.foto_carteira_vacinacao || null;
+    PM.ui.ativarCampoCaptura(app, (id, dataUrl) => {
+      if (id === "carteira_vacinacao") fotoCarteiraVacinacao = dataUrl;
+      else fotoAtual = dataUrl;
+    });
 
     PM.util.qs("#p-peso", app).addEventListener("input", (e) => {
       const sugestao = PM.util.porteMaisProximo(e.target.value);
@@ -327,6 +332,7 @@ window.PM = window.PM || {};
         idade: Number(dados.idade),
         sexo: dados.sexo,
         foto: fotoAtual,
+        foto_carteira_vacinacao: fotoCarteiraVacinacao,
         temperamento: PM.ui.valorChipGroup(app, "temperamento"),
         necessidades: dados.necessidades || "",
         vacina_antirrabica_data: new Date(dados.vacina).toISOString(),
@@ -494,6 +500,12 @@ window.PM = window.PM || {};
     let rasc = PM.state.novaSolicitacao || {};
     let tipo = rasc.tipo || PM.SERVICO_TIPO.TRANSPORTE;
 
+    function minDataAgendamento() {
+      const d = new Date(Date.now() + 5 * 60000);
+      d.setSeconds(0, 0);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
     function iconeEndereco(apelido) {
       const a = (apelido || "").toLowerCase();
       if (a.includes("casa") || a.includes("apto") || a.includes("apart")) return "🏠";
@@ -594,6 +606,18 @@ window.PM = window.PM || {};
         ${PM.ui.chipGroup("pagamento", PM.FORMAS_PAGAMENTO, [rasc.formaPagamento || "PIX"], { unico: true })}
       </div>
 
+      <div class="card">
+        <p class="section-title">⑧ Agendamento (opcional)</p>
+        <label class="checkbox-row mt-8">
+          <input type="checkbox" name="agendar" ${rasc.agendarPara ? "checked" : ""} data-toggle-agendamento>
+          <span>Agendar para uma data e hora futuras, em vez de chamar um condutor agora</span>
+        </label>
+        <div class="field mt-8" data-campo-agendamento ${rasc.agendarPara ? "" : 'style="display:none"'}>
+          <label for="sol-agendar-para">Data e hora</label>
+          <input id="sol-agendar-para" type="datetime-local" name="agendarPara" min="${minDataAgendamento()}" value="${rasc.agendarPara ? rasc.agendarPara.slice(0, 16) : ""}">
+        </div>
+      </div>
+
       <div data-errors></div>
       <button class="btn btn-primary" data-ver-resumo>Ver resumo</button>
       `;
@@ -613,6 +637,11 @@ window.PM = window.PM || {};
           montar();
         })
       );
+      const checkAgendar = PM.util.qs("[data-toggle-agendamento]", app2);
+      const campoAgendar = PM.util.qs("[data-campo-agendamento]", app2);
+      checkAgendar.addEventListener("change", () => {
+        campoAgendar.style.display = checkAgendar.checked ? "" : "none";
+      });
     }
     montar();
 
@@ -626,7 +655,10 @@ window.PM = window.PM || {};
       const recebedorNome = PM.util.qs('input[name="recebedorNome"]', app).value;
       const recebedorTelefone = PM.util.qs('input[name="recebedorTelefone"]', app).value;
       const formaPagamento = PM.ui.valorChipGroup(app, "pagamento")[0] || "PIX";
-      return { tipo, petId, origemId, destinoId, duracaoMin, observacoes, recebedorNome, recebedorTelefone, formaPagamento };
+      const agendarChecked = (PM.util.qs('input[name="agendar"]', app) || {}).checked;
+      const agendarValor = (PM.util.qs('input[name="agendarPara"]', app) || {}).value;
+      const agendarPara = agendarChecked && agendarValor ? new Date(agendarValor).toISOString() : null;
+      return { tipo, petId, origemId, destinoId, duracaoMin, observacoes, recebedorNome, recebedorTelefone, formaPagamento, agendarPara };
     }
 
     // Rascunho automático: salva a cada alteração para não perder o preenchimento ao sair da tela
@@ -655,6 +687,9 @@ window.PM = window.PM || {};
       if (dados.tipo === "TRANSPORTE" && !dados.destinoId) erros.push("Selecione o endereço de destino.");
       if (dados.tipo === "TRANSPORTE" && dados.destinoId && dados.destinoId === dados.origemId) erros.push("O destino deve ser diferente da origem.");
       if (!dados.recebedorNome || !dados.recebedorTelefone) erros.push("Informe nome e telefone de quem vai receber o pet.");
+      const agendarMarcado = PM.util.qs('input[name="agendar"]', app).checked;
+      if (agendarMarcado && !dados.agendarPara) erros.push("Escolha a data e hora do agendamento, ou desmarque a opção.");
+      if (dados.agendarPara && new Date(dados.agendarPara) <= new Date()) erros.push("A data do agendamento precisa ser no futuro.");
       if (dados.petId) {
         const pet = PM.db.get("pet", dados.petId);
         if (PM.util.vacinaVencida(pet.vacina_antirrabica_data)) erros.push("Este pet está com a vacinação antirrábica vencida ou não informada.");
@@ -714,9 +749,13 @@ window.PM = window.PM || {};
         </div>
       </div>
       <div class="card">
-        <p class="text-muted" style="font-size:.8rem">Cancelamento gratuito antes do aceite do condutor. Após o aceite, taxa de ${PM.util.formatBRL(CONST.TAXA_CANCELAMENTO)}.</p>
+        ${
+          rasc.agendarPara
+            ? `<p style="font-weight:700">🗓️ Agendado para ${PM.util.formatDataHoraBR(rasc.agendarPara)}</p><p class="text-muted mt-8" style="font-size:.8rem">A busca por um condutor só começa perto do horário marcado — você pode chamar antes, se quiser.</p>`
+            : `<p class="text-muted" style="font-size:.8rem">Cancelamento gratuito antes do aceite do condutor. Após o aceite, taxa de ${PM.util.formatBRL(CONST.TAXA_CANCELAMENTO)}.</p>`
+        }
       </div>
-      <button class="btn btn-primary" data-confirmar>Confirmar solicitação</button>
+      <button class="btn btn-primary" data-confirmar>${rasc.agendarPara ? "Agendar serviço" : "Confirmar solicitação"}</button>
     `;
 
     PM.shared.paginaSimples(app, { title: "Resumo", back: true, content });
@@ -740,10 +779,16 @@ window.PM = window.PM || {};
         criado_em: new Date().toISOString(),
         concluido_em: null,
         motivo_cancelamento: null,
+        agendado_para: rasc.agendarPara || null,
       });
-      PM.db.insert("servico_evento", { servico_id: servico.id, status: PM.SERVICO_STATUS.SOLICITADO, descricao: "Solicitação criada.", ocorrido_em: servico.criado_em });
+      PM.db.insert("servico_evento", {
+        servico_id: servico.id,
+        status: PM.SERVICO_STATUS.SOLICITADO,
+        descricao: rasc.agendarPara ? `Serviço agendado para ${PM.util.formatDataHoraBR(rasc.agendarPara)}.` : "Solicitação criada.",
+        ocorrido_em: servico.criado_em,
+      });
       PM.state.novaSolicitacao = null;
-      PM.matching.iniciarBusca(servico.id);
+      if (!rasc.agendarPara) PM.matching.iniciarBusca(servico.id);
       PM.router.navegar(`#/tutor/servico/${servico.id}`);
     });
   }
@@ -758,13 +803,35 @@ window.PM = window.PM || {};
     const pet = PM.db.get("pet", servico.pet_id);
 
     function render() {
-      if ([PM.SERVICO_STATUS.PROCURANDO_CONDUTOR, PM.SERVICO_STATUS.SEM_CONDUTOR].includes(servico.status)) {
+      if (servico.status === PM.SERVICO_STATUS.SOLICITADO && servico.agendado_para) {
+        renderAgendado();
+      } else if ([PM.SERVICO_STATUS.PROCURANDO_CONDUTOR, PM.SERVICO_STATUS.SEM_CONDUTOR].includes(servico.status)) {
         renderBuscando();
       } else if ([PM.SERVICO_STATUS.CONCLUIDO, PM.SERVICO_STATUS.AVALIADO].includes(servico.status)) {
         PM.router.navegar(servico.status === "CONCLUIDO" ? `#/tutor/servico/${servico.id}/avaliar` : `#/tutor/servico/${servico.id}/detalhe`);
       } else {
         renderEmExecucao();
       }
+    }
+
+    function renderAgendado() {
+      const content = `
+        <div class="card text-center">
+          <p style="font-size:2rem">🗓️</p>
+          <p class="section-title mt-8">Serviço agendado</p>
+          <p class="text-muted">${PM.util.escapeHtml(pet.nome)} · ${servico.tipo === "TRANSPORTE" ? "Transporte" : "Passeio"}</p>
+          <p class="mt-8" style="font-weight:700">${PM.util.formatDataHoraBR(servico.agendado_para)}</p>
+        </div>
+        <button class="btn btn-primary" data-chamar-agora>Chamar condutor agora</button>
+        <button class="btn btn-danger" data-cancelar>Cancelar agendamento</button>
+      `;
+      PM.shared.paginaSimples(app, { title: "Agendado", back: false, content });
+      PM.util.qs("[data-chamar-agora]", app).addEventListener("click", () => {
+        PM.db.update("servico", servico.id, { agendado_para: null });
+        PM.matching.iniciarBusca(servico.id);
+        PM.router.render();
+      });
+      PM.util.qs("[data-cancelar]", app).addEventListener("click", () => cancelarServico(servico.id, "#/tutor/home"));
     }
 
     function renderBuscando() {

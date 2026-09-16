@@ -168,14 +168,16 @@ PM.ui = {
     return `<span class="badge badge-${tipo}">${PM.util.escapeHtml(texto)}</span>`;
   },
 
-  /* Campo de captura de imagem com moldura-guia (RF-DOC-07/08) */
-  campoCaptura({ id, label, helper, value }) {
+  /* Campo de captura de imagem com moldura-guia. `guia` é o texto mostrado dentro da moldura antes de
+     capturar — cada uso passa o texto certo pro seu contexto (documento, pet, rosto, veículo etc.),
+     em vez do texto de documento (RF-DOC-07) aparecer fora de contexto. */
+  campoCaptura({ id, label, helper, value, guia }) {
     return `
       <div class="capture-field" data-capture="${id}">
         <p class="capture-label">${PM.util.escapeHtml(label)}</p>
         ${helper ? `<p class="capture-helper">${PM.util.escapeHtml(helper)}</p>` : ""}
         <div class="capture-frame ${value ? "has-image" : ""}" data-capture-frame>
-          ${value ? `<img src="${value}" alt="${PM.util.escapeHtml(label)}" class="capture-preview">` : `<div class="capture-guide">Enquadre o documento inteiro, sem reflexo</div>`}
+          ${value ? `<img src="${value}" alt="${PM.util.escapeHtml(label)}" class="capture-preview">` : `<div class="capture-guide">${PM.util.escapeHtml(guia || "Toque em \"Capturar foto\" para continuar")}</div>`}
         </div>
         <input type="file" accept="image/*" capture="environment" class="capture-input" data-capture-input hidden>
         <div class="capture-actions">
