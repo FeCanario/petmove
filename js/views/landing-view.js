@@ -130,7 +130,7 @@ window.PM = window.PM || {};
           <div class="landing-footer-grid">
             <div>
               <div class="landing-footer-brand"><img src="assets/PetMove.jpeg" alt="PetMove">PetMove</div>
-              <p style="font-size:.85rem;max-width:320px;opacity:.85">Conforto e carinho em cada passeio. Protótipo acadêmico desenvolvido para a disciplina de Engenharia de Software 2.</p>
+              <p style="font-size:.85rem;max-width:320px;opacity:.85">Conforto e carinho em cada passeio. Transporte e passeio de pets com condutores credenciados.</p>
             </div>
             <div>
               <h4>Plataforma</h4>
@@ -149,7 +149,7 @@ window.PM = window.PM || {};
               </ul>
             </div>
           </div>
-          <p class="landing-footer-bottom">© 2026 PetMove — projeto acadêmico, sem vínculo comercial real.</p>
+          <p class="landing-footer-bottom">© 2026 PetMove. Todos os direitos reservados.</p>
         </footer>
 
         <a class="whatsapp-fab" target="_blank" rel="noopener"

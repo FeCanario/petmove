@@ -127,8 +127,9 @@ window.PM = window.PM || {};
       e.preventDefault();
       PM.ui.abrirModal(`
         <h2 class="modal-title">Termos de Uso</h2>
-        <p class="modal-text">Protótipo acadêmico PetMove. Ao usar o aplicativo você concorda com o tratamento dos dados
-        informados apenas para fins de demonstração local, sem envio a terceiros.</p>
+        <p class="modal-text">Ao usar o PetMove, você concorda com o tratamento dos dados informados
+        para viabilizar o transporte e o passeio do seu pet, sempre com o menor compartilhamento possível
+        de informações entre tutores, condutores e a equipe da plataforma.</p>
         <div class="modal-actions"><button class="btn btn-primary" data-modal-dismiss>Entendi</button></div>
       `);
     });

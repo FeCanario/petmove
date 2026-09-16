@@ -3,3 +3,6 @@ credenciais.local.txt
 
 # Configuração local do Claude Code
 .claude/
+
+# Vídeos de demonstração (arquivos grandes, não fazem parte do site)
+videos/
