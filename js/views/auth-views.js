@@ -49,11 +49,6 @@ window.PM = window.PM || {};
               </form>
 
               <p class="text-center mt-8" data-cadastro-link>${linkCadastro}</p>
-
-              <div class="divider"></div>
-              <p class="text-center text-muted" style="font-size:.74rem">
-                Demonstração: tutor@petmove.com · condutor: rafael@petmove.com · admin@petmove.com — senha <b>senha123</b> (admin: <b>admin123</b>)
-              </p>
             </div>
           </div>
         </div>`;
