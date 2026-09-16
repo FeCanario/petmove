@@ -115,6 +115,109 @@ PM.seed = async function seed() {
     ativo: true,
   });
 
+  const petBidu = db.insert("pet", {
+    usuario_id: tutor.id,
+    nome: "Bidu",
+    especie: "cão",
+    raca: "Labrador",
+    porte: "G",
+    peso: 30,
+    idade: 4,
+    sexo: "Macho",
+    foto: PM.util.placeholderImg("Bidu"),
+    temperamento: ["Agitado", "Dócil"],
+    necessidades: "Precisa de grade divisória, é grande e se movimenta bastante.",
+    vacina_antirrabica_data: diasAtras(90),
+    ativo: true,
+  });
+
+  const petNina = db.insert("pet", {
+    usuario_id: tutor.id,
+    nome: "Nina",
+    especie: "gato",
+    raca: "Persa",
+    porte: "M",
+    peso: 15,
+    idade: 2,
+    sexo: "Fêmea",
+    foto: PM.util.placeholderImg("Nina"),
+    temperamento: ["Dócil"],
+    necessidades: "",
+    vacina_antirrabica_data: diasAtras(30),
+    ativo: true,
+  });
+
+  /* ---------- Segundo tutor de demonstração (mostra isolamento de dados entre contas) ---------- */
+  const tutor2 = db.insert("usuario", {
+    nome: "Diego Ferraz",
+    email: "diego@petmove.com",
+    telefone: "(11) 97654-3210",
+    senha_hash: await hash("senha123"),
+    tipo: "tutor",
+    foto: PM.util.placeholderImg("Diego"),
+    criado_em: diasAtras(45),
+  });
+  const tutor2End1 = db.insert("endereco", {
+    usuario_id: tutor2.id,
+    apelido: "Casa",
+    cep: PM.CEPS[4].cep,
+    logradouro: PM.CEPS[4].logradouro,
+    numero: "128",
+    complemento: "Casa 2",
+    bairro: PM.CEPS[4].bairro,
+    cidade: PM.CEPS[4].cidade,
+    uf: PM.CEPS[4].uf,
+    instrucoes: "Portão azul, campainha ao lado.",
+    lat: PM.CEPS[4].lat,
+    lng: PM.CEPS[4].lng,
+    padrao: true,
+  });
+  db.insert("endereco", {
+    usuario_id: tutor2.id,
+    apelido: "Trabalho",
+    cep: PM.CEPS[0].cep,
+    logradouro: PM.CEPS[0].logradouro,
+    numero: "1500",
+    complemento: "Sala 803",
+    bairro: PM.CEPS[0].bairro,
+    cidade: PM.CEPS[0].cidade,
+    uf: PM.CEPS[0].uf,
+    instrucoes: "Recepção do prédio, pedir para chamar Diego.",
+    lat: PM.CEPS[0].lat,
+    lng: PM.CEPS[0].lng,
+    padrao: false,
+  });
+  const petThor = db.insert("pet", {
+    usuario_id: tutor2.id,
+    nome: "Thor",
+    especie: "cão",
+    raca: "Golden Retriever",
+    porte: "G",
+    peso: 32,
+    idade: 5,
+    sexo: "Macho",
+    foto: PM.util.placeholderImg("Thor"),
+    temperamento: ["Dócil"],
+    necessidades: "",
+    vacina_antirrabica_data: diasAtras(50),
+    ativo: true,
+  });
+  const petLuna = db.insert("pet", {
+    usuario_id: tutor2.id,
+    nome: "Luna",
+    especie: "gato",
+    raca: "Sem raça definida",
+    porte: "P",
+    peso: 3.5,
+    idade: 1,
+    sexo: "Fêmea",
+    foto: PM.util.placeholderImg("Luna"),
+    temperamento: ["Ansioso", "Dócil"],
+    necessidades: "Primeira vez saindo de casa, pode se assustar fácil.",
+    vacina_antirrabica_data: diasAtras(20),
+    ativo: true,
+  });
+
   /* ---------- Administrador ---------- */
   const admin = db.insert("usuario", {
     nome: "Equipe PetMove",
@@ -259,6 +362,144 @@ PM.seed = async function seed() {
     db.salvarDocumento(condEmAnalise.id, tipo, PM.util.placeholderImg(tipo));
   });
 
+  /* ---------- Segundo condutor em análise (enviado antes de Carla, testa ordenação por data) ---------- */
+  const usuEmAnalise2 = db.insert("usuario", {
+    nome: "Marcos Vinícius",
+    email: "marcos@petmove.com",
+    telefone: "(11) 96222-1188",
+    senha_hash: await hash("senha123"),
+    tipo: "condutor",
+    foto: PM.util.placeholderImg("Marcos"),
+    criado_em: diasAtras(4),
+  });
+  const condEmAnalise2 = db.insert("condutor", {
+    usuario_id: usuEmAnalise2.id,
+    cpf: "05633216070",
+    data_nascimento: "1992-11-02",
+    cnh_numero: "65498712300",
+    cnh_categoria: "A",
+    cnh_validade: diasFrente(600),
+    status_cadastro: PM.CONDUTOR_STATUS.EM_ANALISE,
+    data_envio: diasAtras(3),
+    data_analise: null,
+    analisado_por: null,
+    justificativa: "",
+    nota_media: 0,
+    total_servicos: 0,
+    online: false,
+    lat_atual: PM.CEPS[5].lat,
+    lng_atual: PM.CEPS[5].lng,
+    ganhos_dia: 0,
+  });
+  db.insert("veiculo", {
+    condutor_id: condEmAnalise2.id,
+    marca: "Yamaha",
+    modelo: "Factor 150",
+    ano: 2023,
+    cor: "Vermelha",
+    placa: "MVX9A81",
+    tipo: "Moto",
+    portes_aceitos: ["P"],
+    max_pets: 1,
+    grade_divisoria: false,
+    caixa_transporte: true,
+  });
+  ["cnh_frente", "cnh_verso", "selfie_documento", "veiculo_placa"].forEach((tipo) => {
+    db.salvarDocumento(condEmAnalise2.id, tipo, PM.util.placeholderImg(tipo));
+  });
+
+  /* ---------- Condutor com pendência (documento ilegível) ---------- */
+  const usuPendencia = db.insert("usuario", {
+    nome: "Patrícia Lima",
+    email: "patricia@petmove.com",
+    telefone: "(11) 96111-3344",
+    senha_hash: await hash("senha123"),
+    tipo: "condutor",
+    foto: PM.util.placeholderImg("Patricia"),
+    criado_em: diasAtras(6),
+  });
+  const condPendencia = db.insert("condutor", {
+    usuario_id: usuPendencia.id,
+    cpf: "89246531007",
+    data_nascimento: "1991-04-18",
+    cnh_numero: "14785236900",
+    cnh_categoria: "B",
+    cnh_validade: diasFrente(400),
+    status_cadastro: PM.CONDUTOR_STATUS.PENDENCIA,
+    data_envio: diasAtras(5),
+    data_analise: diasAtras(4),
+    analisado_por: admin.id,
+    justificativa: "Foto da frente da CNH está ilegível. Reenvie com melhor iluminação e sem reflexo.",
+    nota_media: 0,
+    total_servicos: 0,
+    online: false,
+    lat_atual: PM.CEPS[2].lat,
+    lng_atual: PM.CEPS[2].lng,
+    ganhos_dia: 0,
+  });
+  db.insert("veiculo", {
+    condutor_id: condPendencia.id,
+    marca: "Hyundai",
+    modelo: "HB20",
+    ano: 2020,
+    cor: "Azul",
+    placa: "PLX4B56",
+    tipo: "Carro",
+    portes_aceitos: ["P", "M"],
+    max_pets: 2,
+    grade_divisoria: true,
+    caixa_transporte: true,
+  });
+  ["cnh_frente", "cnh_verso", "selfie_documento", "veiculo_placa"].forEach((tipo) => {
+    db.salvarDocumento(condPendencia.id, tipo, PM.util.placeholderImg(tipo));
+  });
+
+  /* ---------- Condutor reprovado (RN-19: bloqueia novo cadastro com o mesmo CPF) ---------- */
+  const usuReprovado = db.insert("usuario", {
+    nome: "Igor Santos",
+    email: "igor@petmove.com",
+    telefone: "(11) 96999-2233",
+    senha_hash: await hash("senha123"),
+    tipo: "condutor",
+    foto: PM.util.placeholderImg("Igor"),
+    criado_em: diasAtras(15),
+  });
+  const condReprovado = db.insert("condutor", {
+    usuario_id: usuReprovado.id,
+    cpf: "35817246091",
+    data_nascimento: "1993-07-25",
+    cnh_numero: "25836914700",
+    cnh_categoria: "B",
+    cnh_validade: diasFrente(300),
+    status_cadastro: PM.CONDUTOR_STATUS.REPROVADO,
+    data_envio: diasAtras(14),
+    data_analise: diasAtras(13),
+    analisado_por: admin.id,
+    justificativa: "O rosto da selfie não corresponde à foto do documento enviado.",
+    nota_media: 0,
+    total_servicos: 0,
+    online: false,
+    lat_atual: PM.CEPS[9].lat,
+    lng_atual: PM.CEPS[9].lng,
+    ganhos_dia: 0,
+  });
+  db.insert("veiculo", {
+    condutor_id: condReprovado.id,
+    marca: "Renault",
+    modelo: "Kwid",
+    ano: 2019,
+    cor: "Cinza",
+    placa: "IGX1S23",
+    tipo: "Carro",
+    portes_aceitos: ["P"],
+    max_pets: 1,
+    grade_divisoria: false,
+    caixa_transporte: true,
+  });
+  ["cnh_frente", "cnh_verso", "selfie_documento", "veiculo_placa"].forEach((tipo) => {
+    db.salvarDocumento(condReprovado.id, tipo, PM.util.placeholderImg(tipo));
+  });
+
   /* ---------- Condutor com CNH vencida (RN-13) ---------- */
   const usuVencido = db.insert("usuario", {
     nome: "Eduardo Lima",
@@ -303,16 +544,16 @@ PM.seed = async function seed() {
   });
 
   /* ---------- Histórico de serviços do tutor ---------- */
-  function criarServicoHistorico({ pet, condutor, tipo, status, valor, distanciaKm, avaliar, motivoCancel }) {
+  function criarServicoHistorico({ tutorUsuario = tutor, origem = end1, pet, condutor, tipo, status, valor, distanciaKm, avaliar, motivoCancel }) {
     const criado = diasAtras(10 + Math.floor(Math.random() * 30));
     const srv = db.insert("servico", {
-      tutor_id: tutor.id,
+      tutor_id: tutorUsuario.id,
       condutor_id: condutor ? condutor.cond.id : null,
       pet_id: pet.id,
       tipo,
       status,
-      origem_id: end1.id,
-      destino_id: tipo === "TRANSPORTE" ? end1.id : null,
+      origem_id: origem.id,
+      destino_id: tipo === "TRANSPORTE" ? origem.id : null,
       duracao_passeio: tipo === "PASSEIO" ? 30 : null,
       observacoes: "",
       recebedor_nome: "Atendente",
@@ -372,6 +613,84 @@ PM.seed = async function seed() {
     status: "CONCLUIDO",
     valor: 27,
     distanciaKm: 6,
+  });
+  criarServicoHistorico({
+    pet: petBidu,
+    condutor: c2,
+    tipo: "TRANSPORTE",
+    status: "AVALIADO",
+    valor: 32,
+    distanciaKm: 4,
+    avaliar: { nota: 5, comentario: "Cuidou super bem do Bidu, que é bem grande e agitado." },
+  });
+  criarServicoHistorico({
+    pet: petNina,
+    condutor: c1,
+    tipo: "PASSEIO",
+    status: "AVALIADO",
+    valor: 48,
+    distanciaKm: 0,
+    avaliar: { nota: 4, comentario: "Passeio tranquilo, só demorou um pouco para começar." },
+  });
+  criarServicoHistorico({
+    pet: petOk,
+    condutor: c2,
+    tipo: "PASSEIO",
+    status: "CONCLUIDO",
+    valor: 60,
+    distanciaKm: 0,
+  });
+  criarServicoHistorico({
+    pet: petVencido,
+    condutor: c3,
+    tipo: "TRANSPORTE",
+    status: "AVALIADO",
+    valor: 20,
+    distanciaKm: 2,
+    avaliar: { nota: 5, comentario: "Rápido e cuidadoso, ótima experiência." },
+  });
+  criarServicoHistorico({
+    pet: petBidu,
+    condutor: c1,
+    tipo: "PASSEIO",
+    status: "CANCELADO_PELO_CONDUTOR",
+    valor: 0,
+    distanciaKm: 0,
+    motivoCancel: "Imprevisto de última hora.",
+  });
+
+  /* ---------- Histórico de serviços do Diego (segundo tutor) ---------- */
+  criarServicoHistorico({
+    tutorUsuario: tutor2,
+    origem: tutor2End1,
+    pet: petThor,
+    condutor: c1,
+    tipo: "TRANSPORTE",
+    status: "AVALIADO",
+    valor: 29.5,
+    distanciaKm: 3,
+    avaliar: { nota: 5, comentario: "Motorista muito atencioso com o Thor." },
+  });
+  criarServicoHistorico({
+    tutorUsuario: tutor2,
+    origem: tutor2End1,
+    pet: petLuna,
+    condutor: c3,
+    tipo: "PASSEIO",
+    status: "AVALIADO",
+    valor: 35,
+    distanciaKm: 0,
+    avaliar: { nota: 4, comentario: "Luna ainda fica meio assustada, mas foi bem." },
+  });
+  criarServicoHistorico({
+    tutorUsuario: tutor2,
+    origem: tutor2End1,
+    pet: petThor,
+    condutor: c2,
+    tipo: "PASSEIO",
+    status: "CONCLUIDO",
+    valor: 48,
+    distanciaKm: 0,
   });
 
   PM.util.log && PM.util.log("Seed concluído.");
