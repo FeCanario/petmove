@@ -781,6 +781,8 @@ window.PM = window.PM || {};
         concluido_em: null,
         motivo_cancelamento: null,
         agendado_para: rasc.agendarPara || null,
+        tentativas_codigo: 0,
+        codigo_bloqueado: false,
       });
       PM.db.insert("servico_evento", {
         servico_id: servico.id,
@@ -903,6 +905,15 @@ window.PM = window.PM || {};
             : ""
         }
         ${
+          servico.codigo_bloqueado
+            ? `<div class="card" style="background:var(--color-danger-bg)">
+                <p class="section-title text-danger">Código bloqueado</p>
+                <p class="mt-8" style="font-size:.85rem">O condutor errou o código ${CONST.TENTATIVAS_CODIGO_ENTREGA} vezes. Se você confirma que é o recebedor certo tentando de novo, libere uma nova tentativa.</p>
+                <button class="btn btn-primary mt-8" data-liberar-codigo>Liberar nova tentativa</button>
+              </div>`
+            : ""
+        }
+        ${
           evidencias.length
             ? `<div class="card"><p class="section-title">Fotos recebidas</p><div class="doc-thumb-grid mt-8">${evidencias
                 .map((ev) => `<div class="doc-thumb"><img src="${ev.arquivo}" alt="${ev.tipo}"></div>`)
@@ -918,6 +929,13 @@ window.PM = window.PM || {};
       PM.shared.paginaSimples(app, { title: "Acompanhamento", back: false, content });
       const cancelBtn = PM.util.qs("[data-cancelar]", app);
       if (cancelBtn) cancelBtn.addEventListener("click", () => cancelarServico(servico.id, "#/tutor/home"));
+      const liberarBtn = PM.util.qs("[data-liberar-codigo]", app);
+      if (liberarBtn)
+        liberarBtn.addEventListener("click", () => {
+          PM.db.update("servico", servico.id, { codigo_bloqueado: false, tentativas_codigo: 0 });
+          PM.ui.toast("Nova tentativa liberada para o condutor.", "success");
+          PM.router.render();
+        });
       PM._activeInterval = setInterval(() => PM.router.render(), 1000);
     }
 

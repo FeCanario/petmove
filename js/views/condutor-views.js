@@ -4,6 +4,9 @@ window.PM = window.PM || {};
 (function () {
   const CONST = PM.CONST;
   const CS = PM.CONDUTOR_STATUS;
+  // Sobrevive a um PM.router.render() (ex.: depois de um código de entrega errado) sem perder a foto
+  // já capturada nesta etapa — só é perdida mesmo num reload de página, o que é esperado.
+  const _fotoEvidenciaCache = {};
 
   function usuarioLogado() {
     return PM.auth.usuarioAtual();
@@ -439,6 +442,7 @@ window.PM = window.PM || {};
     };
     const passo = PASSOS[servico.status];
     const enderecoAtual = ["ACEITO", "A_CAMINHO_ORIGEM", "NA_ORIGEM"].includes(servico.status) ? origem : destino;
+    const chaveFotoCache = passo?.exigeFoto ? `${servico.id}:${passo.exigeFoto}` : null;
 
     let cronometro = "";
     if (servico.tipo === "PASSEIO" && servico.status === "EM_ANDAMENTO") {
@@ -462,38 +466,56 @@ window.PM = window.PM || {};
       ${cronometro}
       ${
         passo?.exigeFoto
-          ? `<div class="card">${PM.ui.campoCaptura({ id: "foto_evidencia", label: passo.exigeFoto === "embarque" ? "Foto do embarque" : "Foto do desembarque", guia: "Enquadre o pet junto ao tutor ou recebedor" })}</div>`
+          ? `<div class="card">${PM.ui.campoCaptura({
+              id: "foto_evidencia",
+              label: passo.exigeFoto === "embarque" ? "Foto do embarque" : "Foto do desembarque",
+              guia: "Enquadre o pet junto ao tutor ou recebedor",
+              value: _fotoEvidenciaCache[chaveFotoCache] || null,
+            })}</div>`
           : ""
       }
       ${
         passo?.exigeCodigo
-          ? `<div class="card"><p class="section-title">Código de entrega</p><input class="mt-8" data-codigo maxlength="4" placeholder="0000" style="font-size:1.4rem;letter-spacing:6px;text-align:center;padding:10px;border-radius:8px;border:1.5px solid var(--color-border);width:100%"></div>`
+          ? servico.codigo_bloqueado
+            ? `<div class="card" style="background:var(--color-danger-bg)">
+                <p class="section-title text-danger">Código bloqueado</p>
+                <p class="mt-8" style="font-size:.85rem">Limite de ${CONST.TENTATIVAS_CODIGO_ENTREGA} tentativas excedido. Peça para o tutor liberar uma nova tentativa na tela de acompanhamento do serviço.</p>
+              </div>`
+            : `<div class="card"><p class="section-title">Código de entrega</p><input class="mt-8" data-codigo maxlength="4" placeholder="0000" style="font-size:1.4rem;letter-spacing:6px;text-align:center;padding:10px;border-radius:8px;border:1.5px solid var(--color-border);width:100%"></div>`
           : ""
       }
       <div data-errors></div>
-      ${passo ? `<button class="btn btn-primary" data-avancar>${passo.label}</button>` : ""}
+      ${passo && !(passo.exigeCodigo && servico.codigo_bloqueado) ? `<button class="btn btn-primary" data-avancar>${passo.label}</button>` : ""}
       ${["ACEITO", "A_CAMINHO_ORIGEM"].includes(servico.status) ? `<button class="btn btn-ghost" data-cancelar-condutor>Cancelar serviço</button>` : ""}
     `;
     PM.shared.paginaSimples(app, { title: "Serviço", back: false, content });
 
-    let fotoEvidencia = null;
-    PM.ui.ativarCampoCaptura(app, (id, dataUrl) => (fotoEvidencia = dataUrl));
+    let fotoEvidencia = chaveFotoCache ? _fotoEvidenciaCache[chaveFotoCache] || null : null;
+    PM.ui.ativarCampoCaptura(app, (id, dataUrl) => {
+      fotoEvidencia = dataUrl;
+      if (chaveFotoCache) _fotoEvidenciaCache[chaveFotoCache] = dataUrl;
+    });
 
     const avancarBtn = PM.util.qs("[data-avancar]", app);
     if (avancarBtn)
       avancarBtn.addEventListener("click", () => {
         const erros = [];
         if (passo.exigeFoto && !fotoEvidencia) erros.push("É necessário registrar a foto para avançar.");
-        let tentativasEl;
         if (passo.exigeCodigo) {
           const codigo = PM.util.qs("[data-codigo]", app).value;
           if (codigo !== servico.codigo_entrega) {
-            servico._tentativas = (servico._tentativas || 0) + 1;
-            if (servico._tentativas >= CONST.TENTATIVAS_CODIGO_ENTREGA) {
-              erros.push("Número máximo de tentativas excedido. Contate o suporte.");
-            } else {
-              erros.push(`Código incorreto. Tentativa ${servico._tentativas} de ${CONST.TENTATIVAS_CODIGO_ENTREGA}.`);
-            }
+            // Relê do banco: o "servico" da closure fica desatualizado entre cliques,
+            // já que esta tela não recarrega sozinha a cada tentativa errada.
+            const atual = PM.db.get("servico", servico.id);
+            const tentativas = (atual.tentativas_codigo || 0) + 1;
+            const bloqueado = tentativas >= CONST.TENTATIVAS_CODIGO_ENTREGA;
+            PM.db.update("servico", servico.id, { tentativas_codigo: tentativas, codigo_bloqueado: bloqueado });
+            PM.ui.toast(
+              bloqueado ? "Limite de tentativas excedido. O código foi bloqueado." : `Código incorreto. Tentativa ${tentativas} de ${CONST.TENTATIVAS_CODIGO_ENTREGA}.`,
+              "danger"
+            );
+            PM.router.render();
+            return;
           }
         }
         if (erros.length) {
@@ -502,6 +524,7 @@ window.PM = window.PM || {};
         }
         if (passo.exigeFoto) {
           PM.db.insert("evidencia", { servico_id: servico.id, tipo: passo.exigeFoto, arquivo: fotoEvidencia, registrado_em: new Date().toISOString() });
+          if (chaveFotoCache) delete _fotoEvidenciaCache[chaveFotoCache];
         }
         PM.fsm.transicionarServico(servico.id, passo.proximo, `Condutor avançou para ${PM.SERVICO_STATUS_LABEL[passo.proximo] || passo.proximo}.`);
         if (passo.proximo === "CONCLUIDO") {
