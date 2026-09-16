@@ -3,6 +3,7 @@ window.PM = window.PM || {};
 
 (function () {
   const CONST = PM.CONST;
+  const _statusJaAvisado = {}; // servico_id -> último status já notificado ao tutor (RF-EXE-02)
 
   function tutor() {
     return PM.auth.usuarioAtual();
@@ -801,6 +802,12 @@ window.PM = window.PM || {};
       return;
     }
     const pet = PM.db.get("pet", servico.pet_id);
+
+    const statusAnterior = _statusJaAvisado[servico.id];
+    if (statusAnterior && statusAnterior !== servico.status) {
+      PM.ui.toast(`Atualização do serviço: ${PM.SERVICO_STATUS_LABEL[servico.status] || servico.status}`, "info");
+    }
+    _statusJaAvisado[servico.id] = servico.status;
 
     function render() {
       if (servico.status === PM.SERVICO_STATUS.SOLICITADO && servico.agendado_para) {
